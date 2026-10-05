@@ -1,4 +1,4 @@
 import 'package:flutter/material.dart';
-import 'tahap_06.dart';
+import 'tahap_07.dart';
 
-void main() => runApp(const MaterialApp(home: Tahap6()));
+void main() => runApp(const MaterialApp(home: HomePage()));
