@@ -1,4 +1,4 @@
 import 'package:flutter/material.dart';
-import 'tahap_14.dart';
+import 'course_explorer.dart';
 
-void main() => runApp(const MaterialApp(home: Tahap14()));
+void main() => runApp(const CourseExplorerApp());
