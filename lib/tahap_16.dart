@@ -1,8 +1,6 @@
-// Nama: I Gusti Ayu Putu Jelantik | NIM: 2415051053
 import 'package:flutter/material.dart';
 import 'identity.dart';
 
-// false = versi BERMASALAH, true = versi PERBAIKAN
 const bool fixA = true;
 const bool fixB = true;
 const bool fixC = true;
