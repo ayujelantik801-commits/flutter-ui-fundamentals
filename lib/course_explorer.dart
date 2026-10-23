@@ -2,12 +2,9 @@
 import 'package:flutter/material.dart';
 import 'course_data.dart';
 import 'explorer_widgets.dart';
-// FIX: jika identity.dart juga mendefinisikan studentName/studentId, import
-// ganda menyebabkan error "ambiguous import". 'hide' memastikan hanya
-// student_info.dart yang menjadi sumber konstanta identitas.
 import 'identity.dart' hide studentName, studentId;
 import 'student_info.dart';
-import 'tahap_13.dart' show FeedbackForm; // reusable widget #3
+import 'tahap_13.dart' show FeedbackForm;
 
 class CourseExplorerApp extends StatelessWidget {
   const CourseExplorerApp({super.key});
@@ -22,16 +19,6 @@ class CourseExplorerApp extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------
-// SHELL: adaptive navigation + state bersama (tab aktif & favorit)
-//
-// TAHAP 1 - KLASIFIKASI STATE PADA COURSE EXPLORER
-//  1. favorites        -> SHARED (dipakai Home, Courses, Profile, Detail)
-//  2. coursesFuture    -> SHARED (data course dipakai banyak bagian UI)
-//  3. selectedIndex    -> LOCAL  (hanya dipakai shell untuk navigasi)
-//  4. showLecturer     -> LOCAL  (show/hide info dosen di Detail, setState)
-//  5. isWide (layout)  -> LOCAL  (turunan dari ukuran layar, tidak disimpan)
-// ---------------------------------------------------------------
 class ExplorerShell extends StatefulWidget {
   const ExplorerShell({super.key});
 
@@ -272,13 +259,7 @@ class CoursesScreen extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------
-// DETAIL: data diterima lewat constructor, hasil dikirim lewat pop
-//
-// TAHAP 1: diubah menjadi StatefulWidget untuk menunjukkan LOCAL STATE
-// (showLecturer) yang dikelola dengan setState(). State ini hanya
-// dibutuhkan halaman ini, sehingga tidak perlu Provider.
-// ---------------------------------------------------------------
+
 class CourseDetailScreen extends StatefulWidget {
   final Map<String, dynamic> course;
   final bool isFavorite;
