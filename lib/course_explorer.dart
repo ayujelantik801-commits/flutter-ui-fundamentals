@@ -2,7 +2,11 @@
 import 'package:flutter/material.dart';
 import 'course_data.dart';
 import 'explorer_widgets.dart';
-import 'identity.dart';
+// FIX: jika identity.dart juga mendefinisikan studentName/studentId, import
+// ganda menyebabkan error "ambiguous import". 'hide' memastikan hanya
+// student_info.dart yang menjadi sumber konstanta identitas.
+import 'identity.dart' hide studentName, studentId;
+import 'student_info.dart';
 import 'tahap_13.dart' show FeedbackForm; // reusable widget #3
 
 class CourseExplorerApp extends StatelessWidget {
@@ -20,6 +24,13 @@ class CourseExplorerApp extends StatelessWidget {
 
 // ---------------------------------------------------------------
 // SHELL: adaptive navigation + state bersama (tab aktif & favorit)
+//
+// TAHAP 1 - KLASIFIKASI STATE PADA COURSE EXPLORER
+//  1. favorites        -> SHARED (dipakai Home, Courses, Profile, Detail)
+//  2. coursesFuture    -> SHARED (data course dipakai banyak bagian UI)
+//  3. selectedIndex    -> LOCAL  (hanya dipakai shell untuk navigasi)
+//  4. showLecturer     -> LOCAL  (show/hide info dosen di Detail, setState)
+//  5. isWide (layout)  -> LOCAL  (turunan dari ukuran layar, tidak disimpan)
 // ---------------------------------------------------------------
 class ExplorerShell extends StatefulWidget {
   const ExplorerShell({super.key});
@@ -29,9 +40,9 @@ class ExplorerShell extends StatefulWidget {
 }
 
 class _ExplorerShellState extends State<ExplorerShell> {
-  int selectedIndex = 0;
-  final Set<String> favorites = {};
-  late Future<List<Map<String, dynamic>>> coursesFuture;
+  int selectedIndex = 0; // local state
+  final Set<String> favorites = {}; // shared state
+  late Future<List<Map<String, dynamic>>> coursesFuture; // shared state
 
   @override
   void initState() {
@@ -263,8 +274,12 @@ class CoursesScreen extends StatelessWidget {
 
 // ---------------------------------------------------------------
 // DETAIL: data diterima lewat constructor, hasil dikirim lewat pop
+//
+// TAHAP 1: diubah menjadi StatefulWidget untuk menunjukkan LOCAL STATE
+// (showLecturer) yang dikelola dengan setState(). State ini hanya
+// dibutuhkan halaman ini, sehingga tidak perlu Provider.
 // ---------------------------------------------------------------
-class CourseDetailScreen extends StatelessWidget {
+class CourseDetailScreen extends StatefulWidget {
   final Map<String, dynamic> course;
   final bool isFavorite;
 
@@ -275,7 +290,16 @@ class CourseDetailScreen extends StatelessWidget {
   });
 
   @override
+  State<CourseDetailScreen> createState() => _CourseDetailScreenState();
+}
+
+class _CourseDetailScreenState extends State<CourseDetailScreen> {
+  bool showLecturer = true; // LOCAL STATE (setState)
+
+  @override
   Widget build(BuildContext context) {
+    final course = widget.course;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Detail Course')),
       body: Column(
@@ -298,16 +322,30 @@ class CourseDetailScreen extends StatelessWidget {
                   Text('Kode: ${course['code']}'),
                   Text('SKS: ${course['credits']}'),
                   Text('Status: ${course['status']}'),
-                  Text('Dosen: ${course['lecturer']}'),
-                  const SizedBox(height: 24),
+                  if (showLecturer) Text('Dosen: ${course['lecturer']}'),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() => showLecturer = !showLecturer);
+                    },
+                    icon: Icon(
+                      showLecturer ? Icons.visibility_off : Icons.visibility,
+                    ),
+                    label: Text(
+                      showLecturer ? 'Sembunyikan info dosen' : 'Tampilkan info dosen',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   FilledButton.icon(
                     // true = minta halaman sebelumnya mengubah status favorit
                     onPressed: () => Navigator.pop(context, true),
                     icon: Icon(
-                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      widget.isFavorite ? Icons.favorite : Icons.favorite_border,
                     ),
                     label: Text(
-                      isFavorite ? 'Hapus dari Favorit' : 'Tambah ke Favorit',
+                      widget.isFavorite
+                          ? 'Hapus dari Favorit'
+                          : 'Tambah ke Favorit',
                     ),
                   ),
                 ],
