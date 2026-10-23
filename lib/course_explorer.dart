@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'course_data.dart';
 import 'course_provider.dart';
 import 'explorer_widgets.dart';
+import 'models/course.dart';
 import 'identity.dart' hide studentName, studentId;
 import 'student_info.dart';
 import 'tahap_13.dart' show FeedbackForm; // reusable widget #3
@@ -287,7 +288,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final course = widget.course;
+    // TAHAP 8: Map<String, dynamic> diubah menjadi object Course bertipe jelas
+    final course = Course.fromJson(widget.course);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Detail Course')),
@@ -301,17 +303,17 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    course['title'] as String,
+                    course.title,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Text('Kode: ${course['code']}'),
-                  Text('SKS: ${course['credits']}'),
-                  Text('Status: ${course['status']}'),
-                  if (showLecturer) Text('Dosen: ${course['lecturer']}'),
+                  Text('Kode: ${course.code}'),
+                  Text('SKS: ${course.credits}'),
+                  Text('Status: ${course.status}'),
+                  if (showLecturer) Text('Dosen: ${course.lecturer}'),
                   const SizedBox(height: 8),
                   TextButton.icon(
                     onPressed: () {
