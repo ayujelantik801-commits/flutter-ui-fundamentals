@@ -1,10 +1,12 @@
 // Nama: I Gusti Ayu Putu Jelantik | NIM: 2415051053
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'course_data.dart';
+import 'course_provider.dart';
 import 'explorer_widgets.dart';
 import 'identity.dart' hide studentName, studentId;
 import 'student_info.dart';
-import 'tahap_13.dart' show FeedbackForm;
+import 'tahap_13.dart' show FeedbackForm; // reusable widget #3
 
 class CourseExplorerApp extends StatelessWidget {
   const CourseExplorerApp({super.key});
@@ -19,6 +21,16 @@ class CourseExplorerApp extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------
+// SHELL: adaptive navigation
+//
+// TAHAP 1 - KLASIFIKASI STATE:
+//  1. favorites        -> SHARED (TAHAP 7: dipindah ke CourseProvider)
+//  2. coursesFuture    -> SHARED
+//  3. selectedIndex    -> LOCAL  (hanya untuk navigasi shell)
+//  4. showLecturer     -> LOCAL  (show/hide info dosen di Detail)
+//  5. isWide (layout)  -> LOCAL  (turunan ukuran layar)
+// ---------------------------------------------------------------
 class ExplorerShell extends StatefulWidget {
   const ExplorerShell({super.key});
 
@@ -28,8 +40,7 @@ class ExplorerShell extends StatefulWidget {
 
 class _ExplorerShellState extends State<ExplorerShell> {
   int selectedIndex = 0; // local state
-  final Set<String> favorites = {}; // shared state
-  late Future<List<Map<String, dynamic>>> coursesFuture; // shared state
+  late Future<List<Map<String, dynamic>>> coursesFuture;
 
   @override
   void initState() {
@@ -39,22 +50,12 @@ class _ExplorerShellState extends State<ExplorerShell> {
 
   void onSelect(int index) => setState(() => selectedIndex = index);
 
-  void toggleFavorite(String code) {
-    setState(() {
-      if (!favorites.remove(code)) favorites.add(code);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final pages = <Widget>[
-      HomeScreen(favoriteCount: favorites.length),
-      CoursesScreen(
-        coursesFuture: coursesFuture,
-        favorites: favorites,
-        onToggleFavorite: toggleFavorite,
-      ),
-      ProfileScreen(favoriteCount: favorites.length),
+      const HomeScreen(),
+      CoursesScreen(coursesFuture: coursesFuture),
+      const ProfileScreen(),
     ];
 
     final body = Column(
@@ -119,13 +120,16 @@ class _ExplorerShellState extends State<ExplorerShell> {
 
 // ---------------------------------------------------------------
 // HOME
+// TAHAP 7: context.watch() -> membaca state DAN ikut rebuild saat berubah
 // ---------------------------------------------------------------
 class HomeScreen extends StatelessWidget {
-  final int favoriteCount;
-  const HomeScreen({super.key, required this.favoriteCount});
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final favoriteCount = context.watch<CourseProvider>().favorites.length;
+    debugPrint('REBUILD: HomeScreen (watch)');
+
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -152,23 +156,20 @@ class HomeScreen extends StatelessWidget {
 
 // ---------------------------------------------------------------
 // COURSES: 1 kolom (compact), 2 kolom (medium), 3 kolom (expanded)
+// TAHAP 7:
+//  - context.read()  -> dipakai di aksi (toggle, buka detail), tanpa listen
+//  - Consumer        -> membungkus tiap card agar hanya card yang rebuild
 // ---------------------------------------------------------------
 class CoursesScreen extends StatelessWidget {
   final Future<List<Map<String, dynamic>>> coursesFuture;
-  final Set<String> favorites;
-  final void Function(String code) onToggleFavorite;
 
-  const CoursesScreen({
-    super.key,
-    required this.coursesFuture,
-    required this.favorites,
-    required this.onToggleFavorite,
-  });
+  const CoursesScreen({super.key, required this.coursesFuture});
 
   void toggleWithFeedback(BuildContext context, Map<String, dynamic> course) {
     final code = course['code'] as String;
-    final wasFavorite = favorites.contains(code);
-    onToggleFavorite(code);
+    final provider = context.read<CourseProvider>(); // read: hanya aksi
+    final wasFavorite = provider.isFavorite(code);
+    provider.toggleFavorite(code);
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -187,13 +188,11 @@ class CoursesScreen extends StatelessWidget {
     Map<String, dynamic> course,
   ) async {
     final code = course['code'] as String;
+    final isFav = context.read<CourseProvider>().isFavorite(code); // read
     final toggle = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (_) => CourseDetailScreen(
-          course: course,
-          isFavorite: favorites.contains(code),
-        ),
+        builder: (_) => CourseDetailScreen(course: course, isFavorite: isFav),
       ),
     );
     if (toggle == true && context.mounted) {
@@ -219,11 +218,17 @@ class CoursesScreen extends StatelessWidget {
             final width = constraints.maxWidth;
 
             Widget cardFor(Map<String, dynamic> course) {
-              return CourseCard(
-                course: course,
-                isFavorite: favorites.contains(course['code']),
-                onTap: () => openDetail(context, course),
-                onToggleFavorite: () => toggleWithFeedback(context, course),
+              // Consumer: hanya bagian ini yang dibangun ulang saat notify
+              return Consumer<CourseProvider>(
+                builder: (context, provider, _) {
+                  debugPrint('REBUILD: CourseCard ${course['code']} (Consumer)');
+                  return CourseCard(
+                    course: course,
+                    isFavorite: provider.isFavorite(course['code'] as String),
+                    onTap: () => openDetail(context, course),
+                    onToggleFavorite: () => toggleWithFeedback(context, course),
+                  );
+                },
               );
             }
 
@@ -259,7 +264,10 @@ class CoursesScreen extends StatelessWidget {
   }
 }
 
-
+// ---------------------------------------------------------------
+// DETAIL: data diterima lewat constructor, hasil dikirim lewat pop
+// TAHAP 1: StatefulWidget untuk LOCAL STATE (showLecturer)
+// ---------------------------------------------------------------
 class CourseDetailScreen extends StatefulWidget {
   final Map<String, dynamic> course;
   final bool isFavorite;
@@ -313,7 +321,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       showLecturer ? Icons.visibility_off : Icons.visibility,
                     ),
                     label: Text(
-                      showLecturer ? 'Sembunyikan info dosen' : 'Tampilkan info dosen',
+                      showLecturer
+                          ? 'Sembunyikan info dosen'
+                          : 'Tampilkan info dosen',
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -321,7 +331,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     // true = minta halaman sebelumnya mengubah status favorit
                     onPressed: () => Navigator.pop(context, true),
                     icon: Icon(
-                      widget.isFavorite ? Icons.favorite : Icons.favorite_border,
+                      widget.isFavorite
+                          ? Icons.favorite
+                          : Icons.favorite_border,
                     ),
                     label: Text(
                       widget.isFavorite
@@ -341,10 +353,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
 // ---------------------------------------------------------------
 // PROFILE: identitas + form feedback (scrollable)
+// TAHAP 7: Consumer pada satu bagian kecil (jumlah favorit)
 // ---------------------------------------------------------------
 class ProfileScreen extends StatelessWidget {
-  final int favoriteCount;
-  const ProfileScreen({super.key, required this.favoriteCount});
+  const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -371,7 +383,15 @@ class ProfileScreen extends StatelessWidget {
               ),
               const Center(child: Text(studentId)),
               const SizedBox(height: 4),
-              Center(child: Text('Course favorit: $favoriteCount')),
+              // Hanya baris ini yang dibangun ulang saat favorites berubah
+              Consumer<CourseProvider>(
+                builder: (context, provider, _) {
+                  debugPrint('REBUILD: Profile favorite count (Consumer)');
+                  return Center(
+                    child: Text('Course favorit: ${provider.favorites.length}'),
+                  );
+                },
+              ),
               const Divider(height: 32),
               const Text(
                 'Kirim Feedback',
