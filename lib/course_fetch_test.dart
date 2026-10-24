@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-//const String apiUrl = 'http://localhost:3000/courses';
-const String apiUrl = 'http://localhost:3000/coursess';
+const String apiUrl = 'http://localhost:3000/courses';
+//const String apiUrl = 'http://localhost:3000/coursess';
 
 Future<List<dynamic>> fetchCourses() async {
   final response = await http.get(Uri.parse(apiUrl));
