@@ -80,3 +80,11 @@ flutter run -t lib/experiments/tahap5_change_notifier.dart
 
 ## Tahap 17
 Finalisasi worksheet state management dan architecture. Semua tahap 0-17 sudah di-commit dan di-push.
+
+## Endpoint REST API (Pertemuan 7)
+- Base URL: http://localhost:3000
+- Endpoint: GET /courses
+- Status code: 200 OK
+- Resource: courses
+- Field JSON: id, code, title, credits, status
+- Catatan: memakai json-server lokal (db.json) sebagai API latihan.
