@@ -4,6 +4,7 @@ import 'app.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'services/course_api_service.dart';
+import 'services/course_data_source.dart';
 
 const String studentName = 'I Gusti Ayu Putu Jelantik';
 const String studentId = '2415051053';
@@ -12,12 +13,14 @@ const String studentId = '2415051053';
 const String apiBaseUrl = 'http://localhost:3000';
 
 void main() {
+  // Hanya baris ini yang berubah saat sumber data diganti
+  // (nanti: CourseSupabaseService()).
+  final CourseDataSource dataSource = CourseApiService(apiBaseUrl);
+  final repository = CourseRepository(dataSource);
+
   runApp(
     ChangeNotifierProvider(
-      // service -> repository -> provider, lalu muat data
-      create: (_) => CourseProvider(
-        CourseRepository(CourseApiService(apiBaseUrl)),
-      )..loadCourses(),
+      create: (_) => CourseProvider(repository)..loadCourses(),
       child: const CourseExplorerApp(),
     ),
   );
