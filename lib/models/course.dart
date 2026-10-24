@@ -1,7 +1,7 @@
-// Nama: I Gusti Ayu Putu Jelantik | NIM: 2415051053
-// TAHAP 8: Model Course (data bertipe jelas + parsing JSON terpusat).
-
 class Course {
+  static const String defaultLecturer = 'Dr. I Ketut Resika Arthana';
+
+  final int? id;
   final String code;
   final String title;
   final int credits;
@@ -9,29 +9,31 @@ class Course {
   final String lecturer;
 
   const Course({
+    this.id,
     required this.code,
     required this.title,
     required this.credits,
-    required this.status,
-    this.lecturer = '',
+    this.status = 'planned',
+    this.lecturer = defaultLecturer,
   });
 
   factory Course.fromJson(Map<String, dynamic> json) {
     return Course(
+      id: json['id'] as int?,
       code: json['code'] as String,
       title: json['title'] as String,
-      credits: (json['credits'] as num).toInt(),
-      status: json['status'] as String,
-      lecturer: (json['lecturer'] as String?) ?? '',
+      credits: json['credits'] as int,
+      status: (json['status'] as String?) ?? 'planned',
+      lecturer: (json['lecturer'] as String?) ?? defaultLecturer,
     );
   }
 
-  // Dipakai sementara agar widget lama yang memakai Map tetap berfungsi
+  // lecturer sengaja tidak dikirim: tabel API/Supabase hanya punya
+  // kolom code, title, credits, status.
   Map<String, dynamic> toJson() => {
         'code': code,
         'title': title,
         'credits': credits,
         'status': status,
-        'lecturer': lecturer,
       };
 }
