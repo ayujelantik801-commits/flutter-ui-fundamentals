@@ -1,9 +1,10 @@
 // Nama: I Gusti Ayu Putu Jelantik | NIM: 2415051053
 // WIDGET REUSABLE untuk Course Explorer: IdentityBar dan CourseCard.
 // Kedua widget stateless: data turun lewat constructor, aksi naik lewat callback.
+// TAHAP 7 (P7): CourseCard punya tombol Edit opsional (onEdit).
 import 'package:flutter/material.dart';
-import '../student_info.dart';
 import '../models/course.dart';
+import '../student_info.dart';
 
 // ---------------------------------------------------------------
 // IdentityBar: bar identitas (NIM - Nama) di bawah AppBar
@@ -38,6 +39,7 @@ class CourseCard extends StatelessWidget {
   final bool isFavorite;
   final VoidCallback onTap;
   final VoidCallback onToggleFavorite;
+  final VoidCallback? onEdit; // opsional: tombol Edit hanya tampil jika diisi
 
   const CourseCard({
     super.key,
@@ -45,6 +47,7 @@ class CourseCard extends StatelessWidget {
     required this.isFavorite,
     required this.onTap,
     required this.onToggleFavorite,
+    this.onEdit,
   });
 
   Color _statusColor(String status) {
@@ -100,6 +103,12 @@ class CourseCard extends StatelessWidget {
                     child: Text(status),
                   ),
                   const Spacer(),
+                  if (onEdit != null)
+                    IconButton(
+                      tooltip: 'Edit',
+                      onPressed: onEdit,
+                      icon: const Icon(Icons.edit_outlined),
+                    ),
                   IconButton(
                     onPressed: onToggleFavorite,
                     icon: Icon(

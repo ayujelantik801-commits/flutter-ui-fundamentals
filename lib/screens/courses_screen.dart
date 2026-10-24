@@ -63,12 +63,17 @@ class CoursesScreen extends StatelessWidget {
           return Consumer<CourseProvider>(
             builder: (context, p, _) {
               debugPrint('REBUILD: CourseCard ${course.code} (Consumer)');
-              return CourseCard(
+                            return CourseCard(
                 course: course.toJson(),
                 isFavorite: p.isFavorite(course.code),
                 onTap: () => openCourseDetail(context, course),
                 onToggleFavorite: () =>
                     toggleFavoriteWithFeedback(context, course),
+                onEdit: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => CourseFormPage(course: course),
+                  ),
+                ),
               );
             },
           );

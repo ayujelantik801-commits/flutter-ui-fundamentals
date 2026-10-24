@@ -1,12 +1,16 @@
 // Nama: I Gusti Ayu Putu Jelantik | NIM: 2415051053
 // TAHAP 6: Form Create Course (POST).
+// TAHAP 7: Mode Edit (PUT): data lama terisi, code read-only.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 
 class CourseFormPage extends StatefulWidget {
-  const CourseFormPage({super.key});
+  const CourseFormPage({super.key, this.course});
+
+  // null = mode Create, terisi = mode Edit
+  final Course? course;
 
   @override
   State<CourseFormPage> createState() => _CourseFormPageState();
@@ -14,10 +18,22 @@ class CourseFormPage extends StatefulWidget {
 
 class _CourseFormPageState extends State<CourseFormPage> {
   final _formKey = GlobalKey<FormState>();
-  final _codeCtrl = TextEditingController();
-  final _titleCtrl = TextEditingController();
-  final _creditsCtrl = TextEditingController();
-  String _status = 'planned';
+  late final TextEditingController _codeCtrl;
+  late final TextEditingController _titleCtrl;
+  late final TextEditingController _creditsCtrl;
+  late String _status;
+
+  bool get _isEdit => widget.course != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final c = widget.course;
+    _codeCtrl = TextEditingController(text: c?.code ?? '');
+    _titleCtrl = TextEditingController(text: c?.title ?? '');
+    _creditsCtrl = TextEditingController(text: c?.credits.toString() ?? '');
+    _status = c?.status ?? 'planned';
+  }
 
   @override
   void dispose() {
@@ -35,17 +51,29 @@ class _CourseFormPageState extends State<CourseFormPage> {
     final navigator = Navigator.of(context);
 
     final course = Course(
+      id: widget.course?.id,
       code: _codeCtrl.text.trim().toUpperCase(),
       title: _titleCtrl.text.trim(),
       credits: int.parse(_creditsCtrl.text.trim()),
       status: _status,
+      lecturer: widget.course?.lecturer ?? Course.defaultLecturer,
     );
 
     try {
-      await provider.createCourse(course);
+      if (_isEdit) {
+        await provider.updateCourse(widget.course!.id!, course);
+      } else {
+        await provider.createCourse(course);
+      }
       if (!context.mounted) return;
       messenger.showSnackBar(
-        SnackBar(content: Text('Course ${course.code} berhasil ditambahkan')),
+        SnackBar(
+          content: Text(
+            _isEdit
+                ? 'Course ${course.code} berhasil diperbarui'
+                : 'Course ${course.code} berhasil ditambahkan',
+          ),
+        ),
       );
       navigator.pop();
     } catch (e) {
@@ -62,7 +90,7 @@ class _CourseFormPageState extends State<CourseFormPage> {
     final isSaving = provider.isSaving;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tambah Course')),
+      appBar: AppBar(title: Text(_isEdit ? 'Edit Course' : 'Tambah Course')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -71,15 +99,22 @@ class _CourseFormPageState extends State<CourseFormPage> {
             children: [
               TextFormField(
                 controller: _codeCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Kode (contoh: MOB05)',
-                  border: OutlineInputBorder(),
+                readOnly: _isEdit,
+                decoration: InputDecoration(
+                  labelText: _isEdit
+                      ? 'Kode (tidak dapat diubah)'
+                      : 'Kode (contoh: MOB05)',
+                  border: const OutlineInputBorder(),
+                  filled: _isEdit,
                 ),
                 validator: (v) {
                   final value = (v ?? '').trim().toUpperCase();
                   if (value.isEmpty) return 'Kode wajib diisi';
-                  final exists = provider.courses.any((c) => c.code == value);
-                  if (exists) return 'Kode sudah dipakai';
+                  if (!_isEdit) {
+                    final exists =
+                        provider.courses.any((c) => c.code == value);
+                    if (exists) return 'Kode sudah dipakai';
+                  }
                   return null;
                 },
               ),

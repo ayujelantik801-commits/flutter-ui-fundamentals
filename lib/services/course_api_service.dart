@@ -1,6 +1,7 @@
 // Nama: I Gusti Ayu Putu Jelantik | NIM: 2415051053
 // TAHAP 4: Service yang mengambil data dari REST API.
-// TAHAP 6: ditambah createCourse() untuk HTTP POST.
+// TAHAP 6: createCourse() untuk HTTP POST.
+// TAHAP 7: updateCourse() untuk HTTP PUT.
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -35,5 +36,16 @@ class CourseApiService {
       );
     }
     throw Exception('Gagal membuat course (HTTP ${response.statusCode})');
+  }
+
+  Future<void> updateCourse(int id, Course course) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/courses/$id'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(course.toJson()),
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Gagal memperbarui course (HTTP ${response.statusCode})');
+    }
   }
 }
