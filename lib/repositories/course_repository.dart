@@ -2,13 +2,14 @@
 // TAHAP 10: Repository sebagai lapisan abstraksi antara Provider dan sumber data.
 // Provider cukup memanggil getCourses() tanpa tahu data berasal dari mana.
 import '../models/course.dart';
-import '../services/course_service.dart';
+import '../services/course_api_service.dart';
+
 class CourseRepository {
-  final CourseService service;
+  final CourseApiService service;
 
   CourseRepository(this.service);
 
   Future<List<Course>> getCourses() {
-    return service.loadCourses();
+    return service.getCourses();
   }
 }
