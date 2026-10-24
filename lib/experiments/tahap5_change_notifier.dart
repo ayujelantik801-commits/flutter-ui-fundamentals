@@ -2,7 +2,7 @@
 // TAHAP 5: Menguji ChangeNotifier dan notifyListeners().
 // Jalankan: flutter run -t lib/experiments/tahap5_change_notifier.dart
 import 'package:flutter/material.dart';
-import '../course_provider.dart';
+import '../providers/course_provider.dart';
 import '../repositories/course_repository.dart';
 import '../services/course_service.dart';
 import '../student_info.dart';

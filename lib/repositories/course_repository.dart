@@ -3,7 +3,6 @@
 // Provider cukup memanggil getCourses() tanpa tahu data berasal dari mana.
 import '../models/course.dart';
 import '../services/course_service.dart';
-
 class CourseRepository {
   final CourseService service;
 

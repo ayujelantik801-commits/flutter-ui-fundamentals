@@ -3,8 +3,8 @@
 // (favorites) dan async state (courses, isLoading, error).
 import 'package:flutter/foundation.dart';
 
-import 'models/course.dart';
-import 'repositories/course_repository.dart';
+import '../models/course.dart';
+import '../repositories/course_repository.dart';
 
 class CourseProvider extends ChangeNotifier {
   // TAHAP 11: repository sebagai dependency (bukan rootBundle langsung)
