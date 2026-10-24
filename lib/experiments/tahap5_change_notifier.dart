@@ -3,6 +3,8 @@
 // Jalankan: flutter run -t lib/experiments/tahap5_change_notifier.dart
 import 'package:flutter/material.dart';
 import '../course_provider.dart';
+import '../repositories/course_repository.dart';
+import '../services/course_service.dart';
 import '../student_info.dart';
 
 void main() => runApp(const Tahap5App());
@@ -36,7 +38,9 @@ class ChangeNotifierPage extends StatefulWidget {
 class _ChangeNotifierPageState extends State<ChangeNotifierPage> {
   // Object state dibuat sekali dan hidup selama halaman ada.
   // (Di Tahap 6 object ini akan disediakan oleh Provider.)
-  final CourseProvider provider = CourseProvider();
+  final CourseProvider provider = CourseProvider(
+    CourseRepository(CourseService()),
+  );
 
   @override
   void dispose() {

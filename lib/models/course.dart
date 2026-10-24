@@ -25,4 +25,13 @@ class Course {
       lecturer: (json['lecturer'] as String?) ?? '',
     );
   }
+
+  // Dipakai sementara agar widget lama yang memakai Map tetap berfungsi
+  Map<String, dynamic> toJson() => {
+        'code': code,
+        'title': title,
+        'credits': credits,
+        'status': status,
+        'lecturer': lecturer,
+      };
 }

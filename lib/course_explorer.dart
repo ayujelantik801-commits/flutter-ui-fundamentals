@@ -1,7 +1,6 @@
 // Nama: I Gusti Ayu Putu Jelantik | NIM: 2415051053
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'course_data.dart';
 import 'course_provider.dart';
 import 'explorer_widgets.dart';
 import 'models/course.dart';
@@ -27,7 +26,7 @@ class CourseExplorerApp extends StatelessWidget {
 //
 // TAHAP 1 - KLASIFIKASI STATE:
 //  1. favorites        -> SHARED (TAHAP 7: dipindah ke CourseProvider)
-//  2. coursesFuture    -> SHARED
+//  2. courses/isLoading/error -> SHARED (TAHAP 11: di CourseProvider)
 //  3. selectedIndex    -> LOCAL  (hanya untuk navigasi shell)
 //  4. showLecturer     -> LOCAL  (show/hide info dosen di Detail)
 //  5. isWide (layout)  -> LOCAL  (turunan ukuran layar)
@@ -41,13 +40,6 @@ class ExplorerShell extends StatefulWidget {
 
 class _ExplorerShellState extends State<ExplorerShell> {
   int selectedIndex = 0; // local state
-  late Future<List<Map<String, dynamic>>> coursesFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    coursesFuture = loadCourses();
-  }
 
   void onSelect(int index) => setState(() => selectedIndex = index);
 
@@ -55,7 +47,7 @@ class _ExplorerShellState extends State<ExplorerShell> {
   Widget build(BuildContext context) {
     final pages = <Widget>[
       const HomeScreen(),
-      CoursesScreen(coursesFuture: coursesFuture),
+      const CoursesScreen(),
       const ProfileScreen(),
     ];
 
@@ -162,38 +154,34 @@ class HomeScreen extends StatelessWidget {
 //  - Consumer        -> membungkus tiap card agar hanya card yang rebuild
 // ---------------------------------------------------------------
 class CoursesScreen extends StatelessWidget {
-  final Future<List<Map<String, dynamic>>> coursesFuture;
+  const CoursesScreen({super.key});
 
-  const CoursesScreen({super.key, required this.coursesFuture});
-
-  void toggleWithFeedback(BuildContext context, Map<String, dynamic> course) {
-    final code = course['code'] as String;
+  void toggleWithFeedback(BuildContext context, Course course) {
     final provider = context.read<CourseProvider>(); // read: hanya aksi
-    final wasFavorite = provider.isFavorite(code);
-    provider.toggleFavorite(code);
+    final wasFavorite = provider.isFavorite(course.code);
+    provider.toggleFavorite(course.code);
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
           content: Text(
             wasFavorite
-                ? '${course['title']} dihapus dari favorit'
-                : '${course['title']} ditambahkan ke favorit',
+                ? '${course.title} dihapus dari favorit'
+                : '${course.title} ditambahkan ke favorit',
           ),
         ),
       );
   }
 
-  Future<void> openDetail(
-    BuildContext context,
-    Map<String, dynamic> course,
-  ) async {
-    final code = course['code'] as String;
-    final isFav = context.read<CourseProvider>().isFavorite(code); // read
+  Future<void> openDetail(BuildContext context, Course course) async {
+    final isFav = context.read<CourseProvider>().isFavorite(course.code);
     final toggle = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (_) => CourseDetailScreen(course: course, isFavorite: isFav),
+        builder: (_) => CourseDetailScreen(
+          course: course.toJson(),
+          isFavorite: isFav,
+        ),
       ),
     );
     if (toggle == true && context.mounted) {
@@ -203,62 +191,87 @@ class CoursesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: coursesFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return Center(child: Text('Gagal memuat: ${snapshot.error}'));
-        }
-        final courses = snapshot.data!;
+    // TAHAP 11: UI hanya membaca state async dari provider
+    final provider = context.watch<CourseProvider>();
 
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            final width = constraints.maxWidth;
+    // 1) LOADING
+    if (provider.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-            Widget cardFor(Map<String, dynamic> course) {
-              // Consumer: hanya bagian ini yang dibangun ulang saat notify
-              return Consumer<CourseProvider>(
-                builder: (context, provider, _) {
-                  debugPrint('REBUILD: CourseCard ${course['code']} (Consumer)');
-                  return CourseCard(
-                    course: course,
-                    isFavorite: provider.isFavorite(course['code'] as String),
-                    onTap: () => openDetail(context, course),
-                    onToggleFavorite: () => toggleWithFeedback(context, course),
-                  );
-                },
-              );
-            }
-
-            // Compact: 1 kolom (list)
-            if (width < 600) {
-              return ListView.builder(
-                padding: const EdgeInsets.all(12),
-                itemCount: courses.length,
-                itemBuilder: (context, index) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: cardFor(courses[index]),
-                ),
-              );
-            }
-
-            // Medium: 2 kolom, Expanded: 3 kolom
-            final columns = width < 840 ? 2 : 3;
-            return GridView.builder(
-              padding: const EdgeInsets.all(12),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: columns,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                mainAxisExtent: 160,
+    // 2) ERROR
+    if (provider.error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Gagal memuat: ${provider.error}',
+                textAlign: TextAlign.center,
               ),
-              itemCount: courses.length,
-              itemBuilder: (context, index) => cardFor(courses[index]),
-            );
-          },
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: () => context.read<CourseProvider>().loadCourses(),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Coba lagi'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // 3) SUCCESS
+    final courses = provider.courses;
+    if (courses.isEmpty) {
+      return const Center(child: Text('Belum ada course'));
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+
+        Widget cardFor(Course course) {
+          // Consumer: hanya bagian ini yang dibangun ulang saat notify
+          return Consumer<CourseProvider>(
+            builder: (context, p, _) {
+              debugPrint('REBUILD: CourseCard ${course.code} (Consumer)');
+              return CourseCard(
+                course: course.toJson(),
+                isFavorite: p.isFavorite(course.code),
+                onTap: () => openDetail(context, course),
+                onToggleFavorite: () => toggleWithFeedback(context, course),
+              );
+            },
+          );
+        }
+
+        // Compact: 1 kolom (list)
+        if (width < 600) {
+          return ListView.builder(
+            padding: const EdgeInsets.all(12),
+            itemCount: courses.length,
+            itemBuilder: (context, index) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: cardFor(courses[index]),
+            ),
+          );
+        }
+
+        // Medium: 2 kolom, Expanded: 3 kolom
+        final columns = width < 840 ? 2 : 3;
+        return GridView.builder(
+          padding: const EdgeInsets.all(12),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            mainAxisExtent: 160,
+          ),
+          itemCount: courses.length,
+          itemBuilder: (context, index) => cardFor(courses[index]),
         );
       },
     );
