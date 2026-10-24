@@ -1,8 +1,7 @@
 // Nama: I Gusti Ayu Putu Jelantik | NIM: 2415051053
 // TAHAP 5 + 11: ChangeNotifier untuk shared state course
 // (favorites) dan async state (courses, isLoading, error).
-// TAHAP 6 (P7): isSaving dan createCourse().
-// TAHAP 7 (P7): updateCourse().
+// TAHAP 6-8 (P7): isSaving, createCourse(), updateCourse(), deleteCourse().
 import 'package:flutter/foundation.dart';
 
 import '../models/course.dart';
@@ -70,6 +69,23 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
     try {
       await repository.updateCourse(id, course);
+      await loadCourses();
+    } finally {
+      isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteCourse(Course course) async {
+    final id = course.id;
+    if (id == null) throw Exception('Course belum memiliki id');
+    if (isSaving) return;
+    isSaving = true;
+    notifyListeners();
+    try {
+      await repository.deleteCourse(id);
+      // Hapus juga dari favorites agar tidak tersisa data yatim.
+      favorites.remove(course.code);
       await loadCourses();
     } finally {
       isSaving = false;

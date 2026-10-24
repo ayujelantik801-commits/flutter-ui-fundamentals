@@ -12,6 +12,8 @@ import 'course_form_page.dart';
 // COURSES: 1 kolom (compact), 2 kolom (medium), 3 kolom (expanded)
 // TAHAP 5 (P7): state loading, error (ErrorView + Retry), empty, success
 // TAHAP 6 (P7): tombol + untuk membuka form Create Course (POST)
+// TAHAP 7 (P7): tombol Edit pada kartu (PUT)
+// TAHAP 8 (P7): tombol Hapus + dialog konfirmasi (DELETE)
 // TAHAP 7:  Consumer membungkus tiap card agar hanya card yang rebuild
 // TAHAP 11: UI hanya membaca state async dari provider
 // TAHAP 13: aksi toggle dan buka detail memakai course_actions.dart
@@ -32,8 +34,51 @@ class CoursesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBody(BuildContext context) {
-    final provider = context.watch<CourseProvider>();
+  // Dialog konfirmasi -> DELETE -> SnackBar.
+  // screenContext milik CoursesScreen (tetap ada saat list di-refresh),
+  // bukan milik kartu yang ikut hilang saat loadCourses().
+  Future<void> _confirmAndDelete(
+    BuildContext screenContext,
+    Course course,
+  ) async {
+    final provider = screenContext.read<CourseProvider>();
+
+    final confirmed = await showDialog<bool>(
+      context: screenContext,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Hapus course?'),
+        content: Text('${course.code} - ${course.title} akan dihapus.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    String message;
+    try {
+      await provider.deleteCourse(course);
+      message = 'Course ${course.code} berhasil dihapus';
+    } catch (e) {
+      message = 'Gagal menghapus: $e';
+    }
+
+    if (!screenContext.mounted) return;
+    ScaffoldMessenger.of(screenContext).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  Widget _buildBody(BuildContext screenContext) {
+    final provider = screenContext.watch<CourseProvider>();
 
     // 1) LOADING
     if (provider.isLoading) {
@@ -63,7 +108,7 @@ class CoursesScreen extends StatelessWidget {
           return Consumer<CourseProvider>(
             builder: (context, p, _) {
               debugPrint('REBUILD: CourseCard ${course.code} (Consumer)');
-                            return CourseCard(
+              return CourseCard(
                 course: course.toJson(),
                 isFavorite: p.isFavorite(course.code),
                 onTap: () => openCourseDetail(context, course),
@@ -74,6 +119,7 @@ class CoursesScreen extends StatelessWidget {
                     builder: (_) => CourseFormPage(course: course),
                   ),
                 ),
+                onDelete: () => _confirmAndDelete(screenContext, course),
               );
             },
           );

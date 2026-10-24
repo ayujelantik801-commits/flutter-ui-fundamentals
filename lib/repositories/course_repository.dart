@@ -1,8 +1,7 @@
 // Nama: I Gusti Ayu Putu Jelantik | NIM: 2415051053
 // TAHAP 10: Repository sebagai lapisan abstraksi antara Provider dan sumber data.
 // Provider cukup memanggil getCourses() tanpa tahu data berasal dari mana.
-// TAHAP 6 (P7): createCourse() untuk HTTP POST.
-// TAHAP 7 (P7): updateCourse() untuk HTTP PUT.
+// TAHAP 6-8 (P7): createCourse(), updateCourse(), deleteCourse().
 import '../models/course.dart';
 import '../services/course_api_service.dart';
 
@@ -21,5 +20,9 @@ class CourseRepository {
 
   Future<void> updateCourse(int id, Course course) {
     return service.updateCourse(id, course);
+  }
+
+  Future<void> deleteCourse(int id) {
+    return service.deleteCourse(id);
   }
 }

@@ -2,6 +2,7 @@
 // TAHAP 4: Service yang mengambil data dari REST API.
 // TAHAP 6: createCourse() untuk HTTP POST.
 // TAHAP 7: updateCourse() untuk HTTP PUT.
+// TAHAP 8: deleteCourse() untuk HTTP DELETE.
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -46,6 +47,13 @@ class CourseApiService {
     );
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('Gagal memperbarui course (HTTP ${response.statusCode})');
+    }
+  }
+
+  Future<void> deleteCourse(int id) async {
+    final response = await http.delete(Uri.parse('$baseUrl/courses/$id'));
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Gagal menghapus course (HTTP ${response.statusCode})');
     }
   }
 }
