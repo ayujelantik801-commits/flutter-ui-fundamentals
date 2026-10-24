@@ -4,11 +4,13 @@ import 'app.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'services/course_service.dart';
+import 'course_fetch_test.dart';
 
 const String studentName = 'I Gusti Ayu Putu Jelantik';
 const String studentId = '245051053';
 
 void main() {
+  testFetchCourses();
   runApp(
     ChangeNotifierProvider(
       // service -> repository -> provider, lalu muat data
