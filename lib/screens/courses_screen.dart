@@ -6,10 +6,12 @@ import '../providers/course_provider.dart';
 import '../widgets/error_view.dart';
 import '../widgets/explorer_widgets.dart';
 import 'course_actions.dart';
+import 'course_form_page.dart';
 
 // ---------------------------------------------------------------
 // COURSES: 1 kolom (compact), 2 kolom (medium), 3 kolom (expanded)
 // TAHAP 5 (P7): state loading, error (ErrorView + Retry), empty, success
+// TAHAP 6 (P7): tombol + untuk membuka form Create Course (POST)
 // TAHAP 7:  Consumer membungkus tiap card agar hanya card yang rebuild
 // TAHAP 11: UI hanya membaca state async dari provider
 // TAHAP 13: aksi toggle dan buka detail memakai course_actions.dart
@@ -19,6 +21,18 @@ class CoursesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      body: _buildBody(context),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const CourseFormPage()),
+        ),
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
     final provider = context.watch<CourseProvider>();
 
     // 1) LOADING
@@ -63,7 +77,7 @@ class CoursesScreen extends StatelessWidget {
         // Compact: 1 kolom (list)
         if (width < 600) {
           return ListView.builder(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 88),
             itemCount: courses.length,
             itemBuilder: (context, index) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -75,7 +89,7 @@ class CoursesScreen extends StatelessWidget {
         // Medium: 2 kolom, Expanded: 3 kolom
         final columns = width < 840 ? 2 : 3;
         return GridView.builder(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 88),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columns,
             crossAxisSpacing: 12,
