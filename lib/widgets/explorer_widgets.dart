@@ -3,6 +3,7 @@
 // Kedua widget stateless: data turun lewat constructor, aksi naik lewat callback.
 import 'package:flutter/material.dart';
 import '../student_info.dart';
+import '../models/course.dart';
 
 // ---------------------------------------------------------------
 // IdentityBar: bar identitas (NIM - Nama) di bawah AppBar
@@ -79,7 +80,7 @@ class CourseCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text('${course['code']} • ${course['credits']} SKS'),
               Text(
-                course['lecturer'].toString(),
+                (course['lecturer'] ?? Course.defaultLecturer).toString(),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),

@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart';
 import '../providers/course_provider.dart';
 import '../repositories/course_repository.dart';
-import '../services/course_service.dart';
+import '../services/course_api_service.dart';
 import '../student_info.dart';
 
 void main() => runApp(const Tahap5App());
@@ -39,8 +39,8 @@ class _ChangeNotifierPageState extends State<ChangeNotifierPage> {
   // Object state dibuat sekali dan hidup selama halaman ada.
   // (Di Tahap 6 object ini akan disediakan oleh Provider.)
   final CourseProvider provider = CourseProvider(
-    CourseRepository(CourseService()),
-  );
+  CourseRepository(CourseApiService('http://localhost:3000')),
+);
 
   @override
   void dispose() {

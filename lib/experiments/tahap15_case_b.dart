@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
 import '../repositories/course_repository.dart';
-import '../services/course_service.dart';
+import '../services/course_api_service.dart';
 import '../student_info.dart';
 
 // true  = versi SALAH (akan muncul error ProviderNotFoundException)
@@ -28,7 +28,9 @@ class CaseBApp extends StatelessWidget {
     }
 
     return ChangeNotifierProvider(
-      create: (_) => CourseProvider(CourseRepository(CourseService())),
+      create: (_) => CourseProvider(
+  CourseRepository(CourseApiService('http://localhost:3000')),
+  ),
       child: MaterialApp(
         title: 'Tahap 15 - Kasus B',
         theme: ThemeData(colorSchemeSeed: Colors.deepPurple, useMaterial3: true),

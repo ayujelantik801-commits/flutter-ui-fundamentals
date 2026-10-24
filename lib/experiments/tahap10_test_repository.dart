@@ -1,18 +1,23 @@
 // Nama: I Gusti Ayu Putu Jelantik | NIM: 2415051053
 // TAHAP 10: Uji CourseRepository dan buktikan sumber data bisa diganti.
 // Jalankan: flutter run -t lib/experiments/tahap10_test_repository.dart
+// Catatan: tombol "REST API" membutuhkan json-server yang sedang menyala.
 import 'package:flutter/material.dart';
 import '../models/course.dart';
 import '../repositories/course_repository.dart';
-import '../services/course_service.dart';
+import '../services/course_api_service.dart';
 import '../student_info.dart';
+
+const String apiBaseUrl = 'http://localhost:3000';
 
 void main() => runApp(const Tahap10App());
 
-// Simulasi sumber data lain (misalnya REST API). Repository TIDAK berubah.
-class FakeCourseService extends CourseService {
+// Simulasi sumber data lain. Repository TIDAK berubah.
+class FakeCourseService extends CourseApiService {
+  FakeCourseService() : super(apiBaseUrl);
+
   @override
-  Future<List<Course>> loadCourses() async {
+  Future<List<Course>> getCourses() async {
     await Future.delayed(const Duration(milliseconds: 500));
     return const [
       Course(
@@ -49,15 +54,18 @@ class RepositoryTestPage extends StatefulWidget {
 class _RepositoryTestPageState extends State<RepositoryTestPage> {
   late CourseRepository repository;
   late Future<List<Course>> future;
-  String sourceLabel = 'JSON asset (CourseService)';
+  String sourceLabel = 'REST API (CourseApiService)';
 
   @override
   void initState() {
     super.initState();
-    useService(CourseService(), 'JSON asset (CourseService)');
+    useService(
+      CourseApiService(apiBaseUrl),
+      'REST API (CourseApiService)',
+    );
   }
 
-  void useService(CourseService service, String label) {
+  void useService(CourseApiService service, String label) {
     repository = CourseRepository(service);
     future = repository.getCourses().then((courses) {
       debugPrint('REPOSITORY [$label]: ${courses.length} course');
@@ -86,11 +94,11 @@ class _RepositoryTestPageState extends State<RepositoryTestPage> {
                 FilledButton(
                   onPressed: () => setState(
                     () => useService(
-                      CourseService(),
-                      'JSON asset (CourseService)',
+                      CourseApiService(apiBaseUrl),
+                      'REST API (CourseApiService)',
                     ),
                   ),
-                  child: const Text('JSON asset'),
+                  child: const Text('REST API'),
                 ),
                 OutlinedButton(
                   onPressed: () => setState(
