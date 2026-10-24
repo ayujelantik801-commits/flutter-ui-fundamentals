@@ -77,3 +77,6 @@ Menjalankan satu eksperimen:
 ```bash
 flutter run -t lib/experiments/tahap5_change_notifier.dart
 ```
+
+## Tahap 17
+Finalisasi worksheet state management dan architecture. Semua tahap 0-17 sudah di-commit dan di-push.
