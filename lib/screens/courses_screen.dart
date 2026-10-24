@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
+import '../widgets/error_view.dart';
 import '../widgets/explorer_widgets.dart';
 import 'course_actions.dart';
 
 // ---------------------------------------------------------------
 // COURSES: 1 kolom (compact), 2 kolom (medium), 3 kolom (expanded)
+// TAHAP 5 (P7): state loading, error (ErrorView + Retry), empty, success
 // TAHAP 7:  Consumer membungkus tiap card agar hanya card yang rebuild
 // TAHAP 11: UI hanya membaca state async dari provider
 // TAHAP 13: aksi toggle dan buka detail memakai course_actions.dart
@@ -24,36 +26,21 @@ class CoursesScreen extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
-    // 2) ERROR
+    // 2) ERROR (pesan + tombol Retry)
     if (provider.error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Gagal memuat: ${provider.error}',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              FilledButton.icon(
-                onPressed: () => context.read<CourseProvider>().loadCourses(),
-                icon: const Icon(Icons.refresh),
-                label: const Text('Coba lagi'),
-              ),
-            ],
-          ),
-        ),
+      return ErrorView(
+        message: 'Gagal memuat: ${provider.error}',
+        onRetry: provider.loadCourses,
       );
     }
 
-    // 3) SUCCESS
+    // 3) EMPTY
     final courses = provider.courses;
     if (courses.isEmpty) {
-      return const Center(child: Text('Belum ada course'));
+      return const Center(child: Text('Data course belum tersedia'));
     }
 
+    // 4) SUCCESS
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
