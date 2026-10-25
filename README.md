@@ -95,3 +95,40 @@ Finalisasi worksheet state management dan architecture. Semua tahap 0-17 sudah d
 - Skema lengkap ada di supabase/schema.sql
 - RLS aktif dengan policy permisif untuk anon, HANYA untuk praktikum
   (bukan pola produksi).
+
+  ## Course Data Manager (Pertemuan 7)
+
+Aplikasi Flutter untuk mengelola data mata kuliah (CRUD) yang terhubung ke backend.
+Pengembangan dari Course Explorer v2 (Pertemuan 5-6): navigasi responsif, halaman
+detail, dan favorites tetap berfungsi.
+
+Identitas: 2415051053 - I Gusti Ayu Putu Jelantik
+
+### Fitur
+- Read, Create, Update, Delete (dengan dialog konfirmasi saat hapus)
+- State loading, empty, error (dengan tombol Retry)
+- SnackBar untuk operasi berhasil/gagal
+- Favorites memakai code sebagai kunci, konsisten di tab Courses dan Favorites
+
+### Backend yang digunakan
+- Aktif: Supabase (tabel courses) lewat CourseSupabaseService
+- Alternatif: REST API lokal (json-server) lewat CourseApiService
+- Sumber data dipilih hanya di lib/main.dart (satu baris)
+
+### Arsitektur singkat
+Screen/Widget -> CourseProvider -> CourseRepository -> CourseDataSource
+(kontrak) -> CourseSupabaseService atau CourseApiService.
+Model: lib/models/course.dart. Screen dan provider tidak berisi kode HTTP/Supabase.
+
+### Cara menjalankan
+1. Jalankan `flutter pub get`.
+2. Isi URL dan publishable key project Supabase di lib/config/supabase_config.dart.
+3. Buat tabel dengan menjalankan supabase/schema.sql di SQL Editor Supabase.
+4. Jalankan `flutter run -d chrome`.
+5. (Opsional, mode REST) jalankan json-server pada port 3000, lalu ganti data
+   source di lib/main.dart menjadi CourseApiService(apiBaseUrl).
+
+### Keamanan
+- Hanya memakai publishable/anon key. Tidak ada service_role atau secret key.
+- RLS aktif; policy permisif untuk anon hanya untuk praktikum, bukan pola produksi.
+- Validasi form tidak menggantikan validasi backend (CHECK constraint, RLS).
