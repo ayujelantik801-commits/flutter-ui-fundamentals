@@ -7,6 +7,7 @@ import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'services/course_api_service.dart';
 import 'services/course_data_source.dart';
+import 'services/course_supabase_service.dart';
 
 const String studentName = 'I Gusti Ayu Putu Jelantik';
 const String studentId = '2415051053';
@@ -26,7 +27,7 @@ Future<void> main() async {
 
   // Sumber data aktif masih REST (Supabase dipakai mulai Tahap 12).
   // Hanya baris ini yang berubah saat berpindah sumber data.
-  final CourseDataSource dataSource = CourseApiService(apiBaseUrl);
+  final CourseDataSource dataSource = CourseSupabaseService();
   final repository = CourseRepository(dataSource);
 
   runApp(
