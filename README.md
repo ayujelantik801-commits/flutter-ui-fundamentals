@@ -88,3 +88,10 @@ Finalisasi worksheet state management dan architecture. Semua tahap 0-17 sudah d
 - Resource: courses
 - Field JSON: id, code, title, credits, status
 - Catatan: memakai json-server lokal (db.json) sebagai API latihan.
+
+## Database Supabase (Pertemuan 7)
+- Tabel: courses (id, code, title, credits, status, created_at)
+- status dibatasi lewat CHECK: planned / active / done
+- Skema lengkap ada di supabase/schema.sql
+- RLS aktif dengan policy permisif untuk anon, HANYA untuk praktikum
+  (bukan pola produksi).
