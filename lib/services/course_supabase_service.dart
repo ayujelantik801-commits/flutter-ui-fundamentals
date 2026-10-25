@@ -15,7 +15,7 @@ class CourseSupabaseService implements CourseDataSource {
   @override
   Future<List<Course>> getCourses() async {
     try {
-      final rows = await _client.from('courses').select().order('id');
+      final rows = await _client.from('courses').select().order('id', ascending: true);
       return rows
           .map((row) => Course.fromJson(row))
           .toList();
