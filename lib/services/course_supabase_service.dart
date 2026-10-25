@@ -2,6 +2,7 @@
 // TAHAP 12 (P7): Sumber data Supabase (SELECT).
 // TAHAP 13 (P7): createCourse() INSERT.
 // TAHAP 14 (P7): updateCourse() UPDATE berdasarkan id.
+// TAHAP 15 (P7): deleteCourse() DELETE berdasarkan id.
 // Memakai kontrak yang sama dengan CourseApiService (Tahap 9).
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -51,7 +52,7 @@ class CourseSupabaseService implements CourseDataSource {
           .update(course.toJson())
           .eq('id', id)
           .select();
-      // Jika RLS menolak atau id tidak ada, Supabase tidak melempar error
+      // Update yang ditolak RLS atau id yang tidak ada tidak melempar error,
       // tetapi mengembalikan 0 baris. Anggap itu kegagalan.
       if (updated.isEmpty) {
         throw Exception('Tidak ada data yang diperbarui (id $id)');
@@ -61,8 +62,17 @@ class CourseSupabaseService implements CourseDataSource {
     }
   }
 
-  // Diisi di Tahap 15.
   @override
-  Future<void> deleteCourse(int id) =>
-      throw UnimplementedError('DELETE dikerjakan di Tahap 15');
+  Future<void> deleteCourse(int id) async {
+    try {
+      final deleted =
+          await _client.from('courses').delete().eq('id', id).select();
+      // Sama seperti update: 0 baris terhapus = gagal (RLS / id tidak ada).
+      if (deleted.isEmpty) {
+        throw Exception('Tidak ada data yang dihapus (id $id)');
+      }
+    } on PostgrestException catch (e) {
+      throw Exception('Gagal menghapus di Supabase: ${e.message}');
+    }
+  }
 }
